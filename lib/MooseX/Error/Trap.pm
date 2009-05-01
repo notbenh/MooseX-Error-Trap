@@ -1,5 +1,88 @@
 package MooseX::Error::Trap;
 
+our $VERSION = '0.01';
+use Moose;
+use Moose::Exporter;
+Moose::Exporter->setup_import_methods(
+   with_caller => [qw{trap}],
+);
+
+sub ____register_trap_dispatch {
+   my ($caller,$trap_method,$dispatch_method) = @_;
+   my $meta   = Class::MOP::Class->initialize($caller);
+   #---------------------------------------------------------------------------
+   #  Make sure that we have a storage location for trap_dispatch
+   #---------------------------------------------------------------------------
+   unless ( $meta->find_attribute_by_name('trap_dispatch') ) {
+      $meta->add_attribute(
+               'trap_dispatch',
+               is => 'rw',
+               isa => 'HashRef',
+               default => sub{{}},
+      );
+   }
+
+use Data::Dumper;
+
+   if ( $meta->find_attribute_by_name('trap_dispatch')->has_write_method ) {
+      #THIS IS RATHER FORECFUL!!
+      $meta->find_attribute_by_name('trap_dispatch')->set_value($meta,{ 
+         grep{ defined} 
+            #$meta->find_attribute_by_name('trap_dispatch')->get_value($meta) || undef
+            $trap_method => $dispatch_method,
+      });
+
+
+   }
+   else {
+      die 'Was not able to set the proper dispatcher as requested, likely trap_dispatch is set to "ro".';
+   }
+
+   
+   
+}
+
+sub trap {
+   my ($caller,$trap_method,$dispatch_method) = @_;
+
+   #---------------------------------------------------------------------------
+   #  Make sure that were dealing with sane input
+   #---------------------------------------------------------------------------
+   confess sprintf(q{The specified dispatch method (%s) is not available via %s},
+                   $dispatch_method, 
+                   ref($caller) || $caller,
+                  ) if defined $dispatch_method && ! $caller->can($dispatch_method) ;
+   my $meta   = Class::MOP::Class->initialize($caller);
+
+   
+   #---------------------------------------------------------------------------
+   #  build our trap
+   #---------------------------------------------------------------------------
+   $meta->add_around_method_modifier(
+            $trap_method,
+            sub{  my $next = shift;
+                  my $self = shift;
+
+                  eval { $self->$next(@_) }
+                  or do{ #$self->trap_dispatch;
+                     return ( defined($dispatch_method) ) 
+                            ? $self->$dispatch_method($@) 
+                            : die $@ ;
+                  };
+            },
+   );
+}
+   
+
+no MooseX::Error::Trap;
+
+1;
+__END__
+
+
+
+
+
 use warnings;
 use strict;
 
