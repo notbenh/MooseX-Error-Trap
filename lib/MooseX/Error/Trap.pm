@@ -85,7 +85,7 @@ sub trap {
 
 =item * A way to modify the relationship between the method run and the deferment method at runtime.
 
-=back 4
+=back 
 
 =head1 AUTHOR
 
