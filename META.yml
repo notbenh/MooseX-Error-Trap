@@ -1,0 +1,21 @@
+---
+name: MooseX-Error-Trap
+version: 0.01
+author:
+  - 'NOTBENH <NOTBENH@cpan.org>'
+abstract: The great new MooseX::Error::Trap!
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+build_requires:
+  Moose: 0
+  Test::More: 0
+  Test::Most: 0
+provides:
+  MooseX::Error::Trap:
+    file: lib/MooseX/Error/Trap.pm
+    version: 0.01
+generated_by: Module::Build version 0.32
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
