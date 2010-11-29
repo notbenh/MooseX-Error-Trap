@@ -9,15 +9,15 @@ Moose::Exporter->setup_import_methods(
 
 =head1 NAME
 
-MooseX::Error::Trap - The great new MooseX::Error::Trap!
+MooseX::Error::Trap - Create error traps for methods.
 
 =head1 VERSION
 
-Version 0.01
+Version 0.011
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.011';
 
 
 =head1 SYNOPSIS

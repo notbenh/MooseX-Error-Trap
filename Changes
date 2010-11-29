@@ -1,5 +1,6 @@
 Revision history for MooseX-Error-Trap
 
-0.01    Date/time
-        First version, released on an unsuspecting world.
-
+0.01    04 May 2009
+        First release, it works but you only have the option for a single dispatch call.
+0.011   05 May 2009
+        Minor fixes, updates to the docs and require Module::Build
