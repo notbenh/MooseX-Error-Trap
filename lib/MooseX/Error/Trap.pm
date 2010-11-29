@@ -5,19 +5,7 @@ Moose::Exporter->setup_import_methods(
    with_caller => [qw{trap}],
 );
 
-
-
-=head1 NAME
-
-MooseX::Error::Trap - Create error traps for methods.
-
-=head1 VERSION
-
-Version 0.011
-
-=cut
-
-our $VERSION = '0.011';
+# ABSTRACT: Create error traps for methods.
 
 
 =head1 SYNOPSIS
@@ -38,7 +26,7 @@ Allows you to wrap any method in an eval and specify a dispatch method if the ev
       ...
    }
 
-=head1 Keywords
+=head1 Exported Keyword
 
 =head2 trap
 
