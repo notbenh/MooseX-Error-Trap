@@ -30,9 +30,20 @@ Allows you to wrap any method in an eval and specify a dispatch method if the ev
 
 =head2 trap
 
-   trap 'run_method_name', 'error_handling_method_name';
+   trap 'wrapped_method', 'trap';
 
-Will wrap any calls to 'run_method_name' in an eval, currently you can only have one deligation method.
+Will wrap any calls to 'wrapped_method' in an eval, and if that eval fails then 'trap' 
+is run. 
+
+Currently 'trap' can be either a string or a CodeRef. The case for a code ref is simple
+if triped execute the code ref, passing $self and $@. When 'trap' is a string things are
+a bit more complicated. If 'trap' is the name of an attribute of $self we check to see 
+what the type constraint is on that attr, if it's 'CodeRef' then we grab the value and 
+proceede like a CodeRef. For any other type constraint we return the value of that attr.
+Lastly if 'trap' is the name of a method ($self->can($trap)) then we execute it passing 
+$@ as the only param. 
+
+In any other case we just die with $@ as though the eval was not there. 
 
 =cut
 
@@ -66,9 +77,14 @@ sub trap {
                   eval { $rv = $self->$next(@_) }
                   or do{ 
                      # If $trap is the name of an attr, and that attr is a CodeRef, grab it
-                     my $attr = $meta->get_attribute($trap);
-                     $trap = $self->$trap
-                        if defined $attr && $attr->type_constraint->equals('CodeRef');
+                     if( my $attr = $meta->get_attribute($trap) ) {
+                        if ($attr->type_constraint->equals('CodeRef') ) {
+                           $trap = $self->$trap; # grab that code ref and store it to $trap
+                        }
+                        else {
+                           return $self->$trap; # non-code attr, just pull the value and use that
+                        }
+                     }
                      $rv = ref($trap) eq ''     ? $self->$trap($@) 
                          : ref($trap) eq 'CODE' ? $trap->($self,$@)
                          : die $@ ; # sane fall back
