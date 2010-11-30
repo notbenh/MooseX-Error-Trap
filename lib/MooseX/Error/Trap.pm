@@ -37,32 +37,43 @@ Will wrap any calls to 'run_method_name' in an eval, currently you can only have
 =cut
 
 sub trap {
-   my ($caller,$trap_method,$dispatch_method) = @_;
+   my $caller = shift;
+   my $wrap   = shift;
+   my $trap   = shift;
 
    #---------------------------------------------------------------------------
-   #  Make sure that were dealing with sane input
+   #  check input
    #---------------------------------------------------------------------------
-   confess sprintf(q{The specified dispatch method (%s) is not available via %s},
-                   $dispatch_method, 
-                   ref($caller) || $caller,
-                  ) if defined $dispatch_method && ! $caller->can($dispatch_method) ;
-   my $meta   = Class::MOP::Class->initialize($caller);
+   confess q{No method specified} unless defined $wrap;
+   confess q{No trap specified}   unless defined $trap;
+   if ( ref($trap) eq '' ) {
+      confess sprintf(q{%s can not %s}, $caller, $trap) unless $caller->can($trap);
+   }
 
-   
    #---------------------------------------------------------------------------
    #  build our trap
    #---------------------------------------------------------------------------
+   #my $meta = Class::MOP::Class->initialize($caller);
+   my $meta = Moose::Meta::Class->initialize($caller);
+   my $attr = $meta->get_attribute($trap);
+
    $meta->add_around_method_modifier(
-            $trap_method,
+            $wrap,
             sub{  my $next = shift;
                   my $self = shift;
 
-                  eval { $self->$next(@_) }
-                  or do{ #$self->trap_dispatch;
-                     return ( defined($dispatch_method) ) 
-                            ? $self->$dispatch_method($@) 
-                            : die $@ ;
+                  my $rv;
+                  eval { $rv = $self->$next(@_) }
+                  or do{ 
+                     # If $trap is the name of an attr, and that attr is a CodeRef, grab it
+                     my $attr = $meta->get_attribute($trap);
+                     $trap = $self->$trap
+                        if defined $attr && $attr->type_constraint->equals('CodeRef');
+                     $rv = ref($trap) eq ''     ? $self->$trap($@) 
+                         : ref($trap) eq 'CODE' ? $trap->($self,$@)
+                         : die $@ ; # sane fall back
                   };
+                  return $rv;
             },
    );
 }
