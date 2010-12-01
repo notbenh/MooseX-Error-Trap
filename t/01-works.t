@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::Most qw{no_plan};
-use Carp::Always;
 BEGIN{ print qq{\n} for 1..10};
 
 #-----------------------------------------------------------------
